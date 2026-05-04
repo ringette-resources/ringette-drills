@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>London Ringette — Drill Bank</title>
+<style>
+  :root {
+    --red: #C0392B; --red-light: #FDEDEC; --red-dark: #922B21;
+    --blue: #1A5276; --blue-light: #EAF2FF; --blue-mid: #2980B9;
+    --green: #1E8449; --green-light: #EAFAF1; --green-mid: #27AE60;
+    --purple: #6C3483; --purple-light: #F5EEF8;
+    --amber: #9A6B00; --amber-light: #FEF9E7;
+    --grey: #444; --grey-light: #F4F4F2; --grey-mid: #E8E8E4;
+    --text: #1a1a1a; --text-muted: #666; --text-light: #999;
+    --border: #E0DDD8; --bg: #F7F6F3; --white: #ffffff;
+    --radius: 10px; --radius-sm: 6px; --radius-pill: 20px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Georgia', serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body * { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  h1, h2, .brand { font-family: 'Georgia', serif; }
+
+  /* HEADER */
+  .header { background: var(--red); color: white; padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .header-left { display: flex; align-items: baseline; gap: 12px; }
+  .brand { font-size: 20px; font-weight: normal; letter-spacing: -0.3px; }
+  .brand-sub { font-size: 13px; opacity: 0.7; font-family: sans-serif; }
+  .drill-count { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: var(--radius-pill); font-size: 13px; }
+
+  /* LAYOUT */
+  .layout { display: flex; min-height: calc(100vh - 60px); }
+  .sidebar { width: 260px; background: var(--white); border-right: 1px solid var(--border); padding: 1.25rem; flex-shrink: 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; }
+  .main { flex: 1; padding: 1.5rem 2rem; }
+
+  /* SEARCH */
+  .search-wrap { margin-bottom: 1.25rem; }
+  .search-input { width: 100%; padding: 9px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; background: var(--grey-light); color: var(--text); outline: none; }
+  .search-input:focus { border-color: var(--red); background: var(--white); }
+
+  /* FILTER GROUPS */
+  .filter-group { margin-bottom: 1.25rem; }
+  .filter-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-light); margin-bottom: 8px; }
+  .filter-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { font-size: 11px; padding: 4px 10px; border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--white); color: var(--text-muted); cursor: pointer; transition: all 0.15s; user-select: none; }
+  .chip:hover { border-color: var(--text-muted); color: var(--text); }
+  .chip.active-skill { background: var(--blue-light); border-color: var(--blue-mid); color: var(--blue); }
+  .chip.active-system { background: var(--green-light); border-color: var(--green-mid); color: var(--green); }
+  .chip.active-format { background: var(--purple-light); border-color: var(--purple); color: var(--purple); }
+  .chip.active-situation { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
+  .chip.active-stage { background: var(--grey-light); border-color: var(--grey); color: var(--grey); }
+  .chip.active-intensity { background: var(--red-light); border-color: var(--red); color: var(--red); }
+  .clear-btn { font-size: 12px; color: var(--text-light); background: none; border: none; cursor: pointer; padding: 2px 0; text-decoration: underline; }
+  .clear-btn:hover { color: var(--red); }
+  .divider { height: 1px; background: var(--border); margin: 1rem 0; }
+
+  /* GRID */
+  .grid-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .results-count { font-size: 13px; color: var(--text-muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(580px, 1fr)); gap: 1.25rem; }
+
+  /* DRILL CARD */
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: box-shadow 0.2s; }
+  .card:hover { box-shadow: var(--shadow-hover); }
+  .card-header { padding: 1rem 1.25rem 0.75rem; border-bottom: 1px solid var(--border); }
+  .card-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  .card-name { font-size: 17px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .parent-tool { font-size: 11px; color: var(--text-light); margin-bottom: 8px; }
+  .parent-tool span { color: var(--blue); font-weight: 500; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: 0.04em; }
+  .tag-skill { background: var(--blue-light); color: var(--blue); }
+  .tag-system { background: var(--green-light); color: var(--green); }
+  .tag-format { background: var(--purple-light); color: var(--purple); }
+  .tag-situation { background: var(--amber-light); color: var(--amber); }
+  .tag-stage { background: var(--grey-light); color: var(--grey); }
+  .tag-intensity { background: var(--red-light); color: var(--red); }
+
+  /* CARD BODY */
+  .card-body { display: grid; grid-template-columns: 200px 1fr; }
+  .col-left { padding: 1rem; border-right: 1px solid var(--border); }
+  .col-right { padding: 1rem 1.25rem; }
+  .diagram-slot { background: var(--grey-light); border: 1px dashed var(--border); border-radius: var(--radius-sm); height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px; overflow: hidden; }
+  .diagram-slot img { width: 100%; height: 100%; object-fit: cover; }
+  .diagram-slot-text { font-size: 11px; color: var(--text-light); }
+  .setup-block { background: var(--grey-light); border-radius: var(--radius-sm); padding: 10px; }
+  .setup-block-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light); margin-bottom: 5px; }
+  .setup-block-text { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+  .section { margin-bottom: 12px; }
+  .section:last-child { margin-bottom: 0; }
+  .section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light); margin-bottom: 5px; }
+  .purpose-text { font-size: 13px; color: var(--text); line-height: 1.55; }
+  ul.ktp-list, ul.mistake-list, ul.prog-list { list-style: none; padding: 0; }
+  ul.ktp-list li, ul.mistake-list li { font-size: 12px; padding: 2px 0 2px 14px; position: relative; line-height: 1.5; color: var(--text-muted); }
+  ul.ktp-list li { color: var(--text); }
+  ul.ktp-list li::before { content: ''; position: absolute; left: 4px; top: 9px; width: 4px; height: 4px; border-radius: 50%; background: var(--blue); }
+  ul.mistake-list li { color: var(--red-dark); }
+  ul.mistake-list li::before { content: ''; position: absolute; left: 4px; top: 9px; width: 4px; height: 4px; border-radius: 50%; background: var(--red); }
+  .pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+  .pill { font-size: 11px; padding: 3px 9px; background: var(--grey-light); border: 1px solid var(--border); border-radius: var(--radius-pill); color: var(--text-muted); }
+  .needs-info { font-size: 11px; color: var(--amber); background: var(--amber-light); padding: 3px 8px; border-radius: var(--radius-sm); display: inline-block; margin-top: 4px; }
+
+  /* CARD FOOTER */
+  .card-footer { border-top: 1px solid var(--border); padding: 8px 1.25rem; display: flex; gap: 8px; background: var(--grey-light); }
+  .footer-btn { font-size: 11px; padding: 4px 12px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--white); color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+  .footer-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+  .empty-title { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+
+  /* MODAL */
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--white); border-radius: var(--radius); max-width: 480px; width: 90%; padding: 1.5rem; }
+  .modal h3 { font-size: 16px; margin-bottom: 1rem; }
+  .modal-btn { display: block; width: 100%; text-align: left; padding: 12px 16px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--grey-light); cursor: pointer; font-size: 14px; color: var(--text); transition: all 0.15s; }
+  .modal-btn:hover { border-color: var(--red); background: var(--red-light); color: var(--red); }
+  .modal-btn small { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .modal-close { width: 100%; padding: 8px; border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 13px; margin-top: 4px; }
+  .modal-close:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="brand">London Ringette</div>
+    <div class="brand-sub">Drill Bank</div>
+  </div>
+  <div class="drill-count" id="drill-count">— drills</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="search-wrap">
+      <input class="search-input" type="search" id="search" placeholder="Search drills..." autocomplete="off">
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Skill</div>
+      <div class="filter-chips" id="filter-skill"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="filter-group">
+      <div class="filter-label">System</div>
+      <div class="filter-chips" id="filter-system"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="filter-group">
+      <div class="filter-label">Format</div>
+      <div class="filter-chips" id="filter-format"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="filter-group">
+      <div class="filter-label">Situation</div>
+      <div class="filter-chips" id="filter-situation"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="filter-group">
+      <div class="filter-label">LTAD Stage</div>
+      <div class="filter-chips" id="filter-stage"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="filter-group">
+      <div class="filter-label">Intensity</div>
+      <div class="filter-chips" id="filter-intensity"></div>
+    </div>
+    <div class="divider"></div>
+    <button class="clear-btn" onclick="clearAll()">Clear all filters</button>
+  </aside>
+
+  <main class="main">
+    <div class="grid-header">
+      <div class="results-count" id="results-count"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none">
+      <div class="empty-title">No drills match your filters</div>
+      <p>Try clearing some filters or adjusting your search.</p>
+    </div>
+  </main>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-bg" id="export-modal">
+  <div class="modal">
+    <h3 id="modal-drill-name"></h3>
+    <button class="modal-btn" id="export-full-btn">
+      Export full card
+      <small>All detail — purpose, setup, KTPs, mistakes, progressions. Good for clinic handouts and assistant coach resources.</small>
+    </button>
+    <button class="modal-btn" id="export-compact-btn">
+      Export compact card
+      <small>Name, KTPs, and diagram slot only. Fits on half a page — good for practice plan sheets.</small>
+    </button>
+    <button class="modal-close" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+const DRILLS = [
+  {
+    id: 1,
+    name: "3v2 Drive and Dish Decision Drill",
+    tool: "Drive & Dish",
+    tags: {
+      skill: ["Shooting","Ring Possession","1-on-1"],
+      system: ["Offensive Zone"],
+      format: ["3-on-2"],
+      situation: ["Even Strength"],
+      stage: ["U16","U19+"],
+      intensity: ["Competitive","Game-simulation"]
+    },
+    purpose: "Forces the ring carrier to read defender collapse in real time and decide: shoot or dish. Trains non-ring-carriers to attack parallel and fill lanes rather than watch.",
+    setup: "3 attackers vs. 2 defenders in the offensive zone. Start from the blue line. Ring carrier must attempt one drive each possession. Defenders play live. Rotate after each possession.",
+    how: "Ring enters at the blue line. Carrier drives toward a defender. Teammates support in parallel and low-post lanes. Carrier reads collapse: shoot or dish. Continues until shot or turnover.",
+    ktp: ["Attack the outside shoulder — not the chest","Feet never stop through the drive","'Drive = me or we' — shoot or dish, either is dangerous","Non-ring-carriers must attack parallel or fill lanes immediately","If dish, keep moving — rebound, screen, or reset"],
+    mistakes: ["Driving straight at defender instead of off the shoulder","Slowing before contact — drill speed through the gap","Dish and stop skating — must keep moving after passing","Non-ring-carriers standing and watching instead of filling lanes"],
+    progressions: ["1v0 ring protection first","1v1 shoulder drive","2v1 drive and dish","Add shot clock","Restrict to one dish option"],
+    needsInfo: null
+  },
+  {
+    id: 2,
+    name: "1v1 Shoulder Drive Drill",
+    tool: "Drive & Dish",
+    tags: {
+      skill: ["1-on-1","Ring Possession"],
+      system: ["Offensive Zone"],
+      format: ["1-on-1"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused","Competitive"]
+    },
+    purpose: "Isolates the core drive mechanic: attack off the outside shoulder, protect the ring behind the foot, and finish with a shot.",
+    setup: "1 attacker vs. 1 defender. Attacker starts at the blue line with the ring. Defender sets at the top of the circles.",
+    how: "Attacker drives directly at defender's outside shoulder. Focus on ring protection behind outside foot. Decision at contact: finish, spin, or reset high. Defender plays active but controlled. Rotate after each rep.",
+    ktp: ["Ring tucked behind outside foot — defender must take body, not stick","Attack shoulder, not chest","Feet never stop","Change of speed before contact is more effective than raw speed","If lane is closed — reset, don't force"],
+    mistakes: ["Driving straight into the defender's chest","Slowing or gliding before contact","Dropping head and losing awareness of passing options","Forcing a closed lane"],
+    progressions: ["1v0 ring protection focus first","Add a dish option (2v1)","Add shot clock pressure"],
+    needsInfo: null
+  },
+  {
+    id: 3,
+    name: "Spin Move Drill",
+    tool: "Drive & Dish",
+    tags: {
+      skill: ["1-on-1","Ring Possession"],
+      system: ["Offensive Zone"],
+      format: ["1-on-1"],
+      situation: ["Even Strength"],
+      stage: ["U16","U19+"],
+      intensity: ["Skill-focused"]
+    },
+    purpose: "Develops the spin move off a defender's hip as a deception tool to open a drive lane when the primary lane is closed.",
+    setup: "1 attacker vs. 1 defender. Tight space — around the circles or along the wall.",
+    how: "Attacker drives, gets defender on hip. Spins off the body, turns into open lane, continues drive to shot or pass. Defender applies controlled pressure. Rotate.",
+    ktp: ["Get the defender on your hip before initiating spin","Spin tight — wide spins lose the advantage","Eyes up through the spin — know where teammates are","Protect the ring on the spin with body and foot position"],
+    mistakes: ["Spinning too wide — defender recovers","Losing the ring on contact during spin","Head down through spin — no awareness after"],
+    progressions: ["Stationary spin mechanics first","Add movement","Add live defender"],
+    needsInfo: null
+  },
+  {
+    id: 4,
+    name: "Trailing and Crossing — 3v2 Read Drill",
+    tool: "Trailing & Crossing",
+    tags: {
+      skill: ["Ring Possession","Passing","Shooting"],
+      system: ["Offensive Zone"],
+      format: ["3-on-2"],
+      situation: ["Even Strength"],
+      stage: ["U16","U19+"],
+      intensity: ["Competitive","Game-simulation"]
+    },
+    purpose: "Trains the trailer and crosser roles in a live 3v2 situation. Creates confusion for defenders through overlapping movement and staggered timing.",
+    setup: "3 attackers vs. 2 defenders in the offensive zone. Ring carrier starts high with a trailer behind and a crosser reading the play.",
+    how: "Carrier drives or cycles. Trailer maintains mirror position behind, ready stick and feet. Crosser reads and executes: sells fake, attacks on the fake, or crosses with purpose. If crosser doesn't receive the ring, they continue and attack. Rotate roles.",
+    ktp: ["Trailer: always in the mirror — ready stick and feet, gap getter","Crosser: quick stick, sell the fake, attack on fake","Cross with purpose — if you don't get it, you go","Stagger timing so defenders must check behind AND track the cross","Carrier keeps head up — reads which role to use"],
+    mistakes: ["Crosser rounding the cut instead of selling tight","Trailer standing too close — loses mirror position","Carrier ignoring both options and driving into traffic","Non-ring-carriers stopping once they read they won't receive"],
+    progressions: ["Walk through roles in 3v0 first","Add passive defenders","Full live 3v2"],
+    needsInfo: null
+  },
+  {
+    id: 5,
+    name: "Low Post / Screener — Net Front Presence Drill",
+    tool: "Low Post / Screener",
+    tags: {
+      skill: ["Shooting","Ring Possession","1-on-1"],
+      system: ["Offensive Zone"],
+      format: ["2-on-1","3-on-2"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused","Competitive"]
+    },
+    purpose: "Establishes net-front presence as a skill: screen, seal, rebound, and read the goalie. Trains the post player to be a scoring threat and an outlet for pressured carriers.",
+    setup: "Post player establishes at the net front. Carrier has the ring in the offensive zone. One defender on the post player.",
+    how: "Carrier drives or cycles. Post player seals defender on their back, establishes screen position. Carrier reads: shoot on the screen or dish to post. Post reads goalie: fast goalie — wait, finish far side; slow goalie — one-timer; panicked goalie — freeze with fake. Rotate.",
+    ktp: ["Seal defender on your back — box out","If you can't see the carrier, they can't see you — move","Add step or fake before shooting; knee height is best location","Fast goalie: wait, finish far side. Slow: one-timer. Panicked: fake","Rebound is your responsibility — stay ready for second ring"],
+    mistakes: ["Post player too close to the net — no working space","Watching instead of moving when screened out of view","Taking ring too early without reading the goalie","Abandoning post position after one pass — stay in the battle"],
+    progressions: ["1v0 post reads only","Add carrier and one defender on post","Full 3v2 with post role required"],
+    needsInfo: null
+  },
+  {
+    id: 6,
+    name: "High Cycle Entry Drill",
+    tool: "High Cycle",
+    tags: {
+      skill: ["Skating","Ring Possession","1-on-1"],
+      system: ["Offensive Zone"],
+      format: ["2-on-1","3-on-2"],
+      situation: ["Even Strength"],
+      stage: ["U16","U19+"],
+      intensity: ["Competitive","Game-simulation"]
+    },
+    purpose: "Trains the high cycle as an offensive entry: an off-ring attacker cycles in with speed across the top, attacks the hardest position for a centre to defend, and opens weak-side lanes.",
+    setup: "Ring carrier in the offensive zone along the wall. Cycler starts outside the zone at the blue line. One centre defender at the top of the triangle.",
+    how: "Carrier controls ring along wall. Cycler enters with speed across the top of the triangle — timing the entry. Carrier reads: pass to cycler for immediate shot, or use cycler as decoy to open weak side. Cycler reads gap: stab move, drive, or shot.",
+    ktp: ["Cycler enters with speed — not a jog. Dangerous entry = dangerous read","Centre must choose: stay high on cycler or step to ring carrier — creates a 2-on-1","Carrier must hold and wait for cycler's speed to peak before releasing","Weak-side attacker reads: if C overcommits to cycle, weak side opens immediately","Natural gaps for stab moves come from cycler drawing the C out"],
+    mistakes: ["Cycler jogging in — no speed, no threat","Carrier passing too early before cycler is in stride","Weak-side player not reading the C commitment and staying static","Cycler coming across flat — needs to attack with angle to create danger"],
+    progressions: ["2v0 timing drill — carrier and cycler","Add passive C","Full 3v2 with cycler required"],
+    needsInfo: null
+  },
+  {
+    id: 7,
+    name: "Pick and Drive — 2v1 Drill",
+    tool: "Pick",
+    tags: {
+      skill: ["1-on-1","Ring Possession","Skating"],
+      system: ["Offensive Zone"],
+      format: ["2-on-1"],
+      situation: ["Even Strength"],
+      stage: ["U16","U19+"],
+      intensity: ["Skill-focused","Competitive"]
+    },
+    purpose: "Creates separation without contact using a pick. Trains the carrier to attack immediately after the pick and the picker to read what the defender does.",
+    setup: "2 attackers vs. 1 defender in the offensive zone. Picker sets in low pick (low walk lane) or high pick (around the centre position).",
+    how: "Picker sets position. Carrier drives tight off the pick — rubs tight, doesn't round. If defender is caught: carrier attacks drive lane immediately. If defender cheats early: drive lane opens before pick even executes. Picker reads what happens: roll to open space if defender follows carrier.",
+    ktp: ["Carrier must rub tight — rounding the pick loses the advantage","Attack immediately after the pick — hesitation lets defender recover","If C is caught on high pick, weak-side D must step — post player opens","If defender cheats early, drive lane opens before the pick","Picker reads defender and rolls: if defender goes with carrier, picker rolls to open space"],
+    mistakes: ["Carrier rounding the pick — too much space, defender recovers","Carrier hesitating after pick instead of attacking immediately","Picker setting up too far away — carrier can't use it","Picker standing static after setting — should roll and stay in the play"],
+    progressions: ["Set static pick mechanics 2v0","Add defender","Full 3v2 with pick required each possession"],
+    needsInfo: null
+  },
+  {
+    id: 8,
+    name: "Drop Pass Timing Drill",
+    tool: "Passing — Drop",
+    tags: {
+      skill: ["Passing","Ring Possession"],
+      system: ["Offensive Zone","Breakout"],
+      format: ["2-on-1","3-on-2"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused","Competitive"]
+    },
+    purpose: "Trains drop pass mechanics and the timing relationship between ring carrier and trailer. Triggers: defender tight, trailer in stride.",
+    setup: "2 attackers (carrier + trailer) with one defender. Half ice. Carrier leads, trailer follows with a gap.",
+    how: "Carrier drives toward defender. When defender commits tight, carrier leaves ring on the line or straight back. Carrier immediately accelerates after drop — doesn't watch. Trailer takes ring in stride and makes next decision. Rotate roles.",
+    ktp: ["Drop = go — carrier must accelerate immediately after the drop","Leave ring straight back or on the line — not sideways","Trailer must already be in stride before the drop","Defender tight is the trigger — not a panic drop","Carrier: don't watch the ring after dropping, attack into open space"],
+    mistakes: ["Carrier slowing or stopping after drop","Trailer not in stride — receives ring standing still","Drop sideways — wrong angle for trailer","Panic drop with no trailer ready","Carrier watching the drop instead of attacking"],
+    progressions: ["2v0 timing — carrier and trailer only","Add passive defender","Live defender","Add full 3v2 with drop required"],
+    needsInfo: null
+  },
+  {
+    id: 9,
+    name: "Across-the-Top Pass — Shot Ready Drill",
+    tool: "Passing — Across",
+    tags: {
+      skill: ["Passing","Shooting"],
+      system: ["Offensive Zone"],
+      format: ["2-on-1","Small Area Game"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused"]
+    },
+    purpose: "Trains the east-west across-the-top pass with the receiver ready to shoot immediately on reception. Timing must beat the defender stepping to cut the lane.",
+    setup: "2 attackers across the top of the offensive zone. 1 defender in the lane between them. Both attackers ready to shoot.",
+    how: "Carrier reads defender's position. When defender is overcommitted or slightly off-angle, fires east-west pass across the top. Receiver takes ring in stride and shoots immediately — no setup. Rotate.",
+    ktp: ["Across = shot now — receiver must be in position before pass is made","Pass flat and fast — no arc. Defender can step into a slow pass","Timing: pass before defender steps, not after","Receiver feet should already be set toward net before ring arrives","Cue: 'Eyes lie, stick tells truth' — fake shot or drive before passing"],
+    mistakes: ["Receiver not ready to shoot — takes ring and sets up instead","Pass with arc — defender tips or intercepts","Passing too late — defender already in lane","Carrier telegraphing the pass with body rotation before release"],
+    progressions: ["Static receiving and shooting mechanics first","Add movement — both players skating","Add live defender"],
+    needsInfo: null
+  },
+  {
+    id: 10,
+    name: "Wrist Shot — In Stride Finishing Drill",
+    tool: "Shooting — Wrist Shot",
+    tags: {
+      skill: ["Shooting"],
+      system: ["Offensive Zone"],
+      format: ["1-on-0","1-on-1"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused"]
+    },
+    purpose: "Develops proper wrist shot mechanics with the emphasis on shooting in stride — weight transfer, snap, follow through — rather than stopping to set up.",
+    setup: "Attackers line up from the blue line. Coach or partner feeds ring at various points. 1v0 or add a defender for pressure.",
+    how: "Attacker drives toward net. Receives ring (or carries) in stride. Shoots without stopping: weight transfer, lower hand power, snap through the wrist, follow through pointing at target. Aim knee height unless screen is perfect. Rotate.",
+    ktp: ["Shoot in stride — don't stop and set up","Lower hand generates power — not the upper hand","Weight transfer through the shot — don't lean back","Knee height is the danger zone","Follow through pointing at the target — not at the ceiling"],
+    mistakes: ["Stopping or slowing to set up the shot","Weak lower hand — punching instead of snapping","Ring floating high — going for power instead of accuracy","No follow through — ring falls flat","Not reading the goalie before releasing"],
+    progressions: ["Static mechanics first — no movement","Walking pace","Game speed with stab receive then shoot","Add defender for pressure"],
+    needsInfo: null
+  },
+  {
+    id: 11,
+    name: "L-Formation Possession — 3v2 Offensive Zone Game",
+    tool: "Offensive Strategies — L Formation",
+    tags: {
+      skill: ["Ring Possession","Passing","Shooting"],
+      system: ["Offensive Zone"],
+      format: ["3-on-2","Small Area Game"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Competitive","Game-simulation"]
+    },
+    purpose: "Trains the L-formation as the default offensive structure: non-ring-carriers flanking the carrier on either side. Prioritizes ring possession and quality scoring chances over rushed shots.",
+    setup: "3 attackers vs. 2 defenders in the full offensive zone. Shot clock running. Ring starts with a free pass or goalie ring.",
+    how: "Attackers maintain L-shape: carrier in the middle, one support on each side. Ring moves until a quality chance is created. If a lane is dead, reset — don't force. Defenders play live. Count possessions. Rotate every 3 possessions.",
+    ktp: ["If I'm standing still, I'm not helping — constant movement","Non-ring-carriers on either side of carrier — never bunch in the corner","Avoid long corner-to-line passes — work the ball through the L","10 seconds is long — don't panic, find the quality chance","If 2-on press → fake + pass; if man-on → protect ring"],
+    mistakes: ["Three attackers bunching in the corner — no width, no options","Long corner-to-line pass across the defensive lane","Rushing a shot because of shot clock panic","Non-ring-carriers standing instead of timing movement","Dump and chase — never acceptable in this drill"],
+    progressions: ["3v0 positioning only","3v1 passive defender","3v2 live with shot clock","Add: carrier cannot shoot — must create for teammate"],
+    needsInfo: null
+  },
+  {
+    id: 12,
+    name: "Shot Clock Possession Game",
+    tool: "Offensive Strategies — Shot Clock Management",
+    tags: {
+      skill: ["Ring Possession","Passing","Shooting"],
+      system: ["Offensive Zone"],
+      format: ["3-on-2","Small Area Game"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Competitive","Game-simulation"]
+    },
+    purpose: "Trains shot clock awareness as a strategic tool — not a panic timer. Goal is to maintain possession, reset the clock when needed, and create quality chances rather than forced shots at expiry.",
+    setup: "3 attackers vs. 2 defenders. Offensive zone. Real 30-second shot clock running. Coach tracks and calls out clock at 15 and 5 seconds.",
+    how: "Possession starts with free pass or goalie ring. Team must either score or maintain possession to reset the shot clock before 0. Every expired clock is a coaching moment — discuss what the better decision was. Run 4-5 possessions per rotation.",
+    ktp: ["Check the clock before receiving the ring in the O-zone","A well-timed reset is better than a poor shot at 3 seconds","10 seconds is enough time for a quality chance — don't panic early","Possession maintained = clock reset available = another quality chance","Communicate: teammates should call clock when carrier can't see it"],
+    mistakes: ["No one checking the clock — expired clock surprise","Forcing a shot at 3 seconds instead of resetting earlier","Resetting possession for its own sake without building to a chance","Ring carrier can't see clock — no communication from teammates"],
+    progressions: ["3v0 possession only — learn the clock rhythm","Add defenders","Competitive: team scores a point for each quality shot, minus one for each expired clock"],
+    needsInfo: null
+  },
+  {
+    id: 13,
+    name: "4v3 Power Play — Overload and Movement Drill",
+    tool: "Offensive Strategies — Special Teams",
+    tags: {
+      skill: ["Ring Possession","Passing","Shooting"],
+      system: ["Offensive Zone"],
+      format: ["Small Area Game"],
+      situation: ["4-on-3"],
+      stage: ["U16","U19+"],
+      intensity: ["Competitive","Game-simulation"]
+    },
+    purpose: "Trains the 4-on-3 power play structure: active movement, weak-side cuts, overloads, and picks to create quality chances. Avoids static play.",
+    setup: "4 attackers vs. 3 defenders. Full offensive zone. Shot clock running. Start from a free pass.",
+    how: "Attackers use overload structure: option 1 — active movement with weak-side attacker cutting middle; option 2 — screener plus 3 attackers using overloads and picks. Ring movement must be intentional — every pass creates an advantage or draws a defender. No static standing.",
+    ktp: ["Make them chase — constant movement is the advantage","Weak-side attacker: cut middle when defender ball-watches","Screener: establish position, seal, be a rebound and touch-pass threat","Every pass should pull a defender or open a lane","Shot clock: use possession — don't shoot just because you have an advantage"],
+    mistakes: ["Static play — standing and passing without movement","Weak-side attacker not reading when to cut","Screener abandoning net front position","Shooting immediately without working the advantage","Shot clock panic — worst shots come from panicked 4v3 teams"],
+    progressions: ["4v0 — walk through structure and roles","4v2 — two passive defenders","4v3 live"],
+    needsInfo: null
+  },
+  {
+    id: 14,
+    name: "3v4 Penalty Kill — Goal-Side Inside Drill",
+    tool: "Defensive — Penalty Kill",
+    tags: {
+      skill: ["1-on-1","Ring Possession"],
+      system: ["Defensive Zone"],
+      format: ["Small Area Game"],
+      situation: ["Penalty Kill"],
+      stage: ["U16","U19+"],
+      intensity: ["Competitive","Game-simulation"]
+    },
+    purpose: "Trains penalty kill structure: goal-side inside positioning, sticks in lanes, last player back accountability, and finding a check. Rewards gaining possession and transitioning.",
+    setup: "3 defenders vs. 4 attackers. Offensive zone. Shot clock running on the attacking team.",
+    how: "Defenders maintain goal-side/inside positioning. Sticks in passing lanes — don't chase the ring. Every defender finds a check. Last defender back is responsible for preventing back-door plays. On possession: immediate first pass and transition. Rotate.",
+    ktp: ["Inside first — goal-side positioning before anything else","Sticks in lanes — not chasing the ring","Find a check before the ring moves to your zone","Last player back: know where back-door threats are","Possession changes everything — immediate transition on gaining ring"],
+    mistakes: ["Chasing the ring instead of maintaining position","High stick or body contact before positioning — penalty","Last player back drifting — no back-door coverage","Gaining possession and not transitioning immediately — sitting in the zone"],
+    progressions: ["3v0 positioning walk-through","3v2 passive attackers","3v4 live"],
+    needsInfo: null
+  },
+  {
+    id: 15,
+    name: "Defensive Triangle — Positional Drill",
+    tool: "Defensive Triangle",
+    tags: {
+      skill: ["1-on-1","Skating"],
+      system: ["Defensive Zone"],
+      format: ["Full Team"],
+      situation: ["Even Strength","4-on-3"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused","Competitive"]
+    },
+    purpose: "Builds defensive triangle positioning, movement mechanics, and communication. Trains all three triangle variations: aggressive push-out, tight/collapse, and balanced. Emphasis on body position, goal-side presence, and active stick.",
+    setup: "3 defenders set in triangle. 3 attackers move around and through the zone. Coach calls triangle type: aggressive, tight, or normal.",
+    how: "Coach calls triangle type. Defenders execute: aggressive — pressure high, deny outside shots, goalie sits deeper; tight — protect low, force outside shots, goalie aggressive; normal — balanced, C-D sync. Attackers probe and move. Defenders communicate on every threat: 'high,' 'low,' 'switch.' Rotate.",
+    ktp: ["Communicate on every threat — 'high,' 'low,' 'switch'","Stay in sync: C moving across means strong-side D cannot sit back","Stick always active but body position first","Closed hands on hip contact — not high stick or open hands","If strong-side D drops: C is exposed on the spin-back — D must overlap"],
+    mistakes: ["Strong-side D sitting too deep on post — gap opens between C and D","C late to top of triangle — open shooting lane","Over-pursuing outside carrier — backdoor exposed","Losing weak-side attacker cycling in with speed","High stick on contact attempt — penalty"],
+    progressions: ["Static positioning and calling — no ring","Coach feeds ring to random attacker — defenders react","Live 3v3 with coach calling triangle type","Add ring carrier under pressure — must maintain triangle"],
+    needsInfo: null
+  },
+  {
+    id: 16,
+    name: "1-2-2 Aggressive Forecheck Drill",
+    tool: "Defensive — Forechecking",
+    tags: {
+      skill: ["Skating","1-on-1"],
+      system: ["Forechecking","Breakout"],
+      format: ["Full Team"],
+      situation: ["Even Strength"],
+      stage: ["U16","U19+"],
+      intensity: ["Competitive","Game-simulation"]
+    },
+    purpose: "Trains the 1-2-2 forecheck system: first check angles the ring carrier, second layer cuts passing lanes, third layer holds the middle and prevents central lane breakout.",
+    setup: "Full ice or 3/4 ice. Defending team sets forecheck in offensive zone. Opponent has goalie ring or possession in their defensive zone.",
+    how: "First checker angles the ring carrier — doesn't chase, angles. Second layer cuts passing lanes and forces bad options. Third layer holds mid-lane and prevents the central lane breakout. If ring is turned over, immediate transition. If opponent exits cleanly, reset and forecheck again. Rotate.",
+    ktp: ["First check: angle, don't chase — flying by is worse than no pressure","Second check: cut the passing lane, force the bad option","Third check: hold the middle — prevent the central lane exit","Line changes: read possession and pressure moments before changing — a bad change creates a numbers disadvantage","Full system or don't go — partial forecheck is worse than none"],
+    mistakes: ["First checker over-committing — beaten clean, now short","Defenders giving too much gap — opponent exits with speed","Poor line change timing — odd-man rush from a bad change","Weak-side forward not collapsing — open diagonal breakout","Second checker chasing instead of cutting lanes"],
+    progressions: ["Walk through roles and positioning — no ring","Passive ball-carrier — react to position only","Live with goalie ring starting point","Add line change read component"],
+    needsInfo: null
+  },
+  {
+    id: 17,
+    name: "Gap Control — 1v1 Defensive Drill",
+    tool: "Defensive — Breakout Coverage",
+    tags: {
+      skill: ["1-on-1","Skating"],
+      system: ["Defensive Zone","Neutral Zone","Breakout"],
+      format: ["1-on-1"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused","Competitive"]
+    },
+    purpose: "Trains gap control: tighten gap when opponent is a threat, loosen when not. Develops the defender's ability to use stick pressure to channel the ring carrier wide without overcommitting.",
+    setup: "1 attacker vs. 1 defender. Start at the blue line. Attacker has ring. Defender sets gap — not too tight, not too loose.",
+    how: "Attacker tries to beat defender with speed, deception, or change of direction. Defender maintains gap: closes aggressively but doesn't overcommit. Uses stick on the ring — never high. Channels attacker to the outside. On overcommit: attacker goes inside, point taken. Rotate.",
+    ktp: ["Close gap aggressively on the ring carrier but don't overcommit","Take away the inside — push to the outside (toward the boards)","Stick on the ring only — never high on the stick or on the body","Checking is timing and positioning, not physicality","If you lunge: you're beaten — stay patient"],
+    mistakes: ["Overcommitting and getting beaten on the drive side","High stick on checking attempt — illegal","Standing up too early — losing gap advantage","Not maintaining goal-side positioning after a pass","Losing sight of the ring carrier when scanning for teammates"],
+    progressions: ["Static gap positioning — walk through","Slow speed attacker — defender focuses on positioning","Full speed 1v1","Add option for attacker to pass — defender must pivot responsibility"],
+    needsInfo: null
+  },
+  {
+    id: 18,
+    name: "Defensive Breakout — First Pass Accuracy Drill",
+    tool: "Defensive — Breakout with Possession",
+    tags: {
+      skill: ["Passing","Skating","Ring Possession"],
+      system: ["Breakout","Neutral Zone"],
+      format: ["Full Team"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused","Competitive"]
+    },
+    purpose: "Trains composure and accuracy on the first pass out of the defensive zone under forecheck pressure. Emphasis on controlled passing to outside lanes, centre urgency to middle support, and one player always goal-side.",
+    setup: "Full team. Goalie starts with the ring. Forecheckers apply pressure (passive to live). Defenders and forwards in breakout positions.",
+    how: "Goalie ring starts the play. First pass controlled to outside lane. Centre finds middle support urgency. One player remains goal-side. If pressured: communicate ('middle,' 'reverse,' 'hold'). Blue line pass must happen before zone exit. Rotate forecheck team.",
+    ktp: ["First pass controlled to outside lanes — not a panic pass","One player always goal-side — no everyone rushing up","Centre urgency to middle support before the ring moves","Communicate before receiving: 'middle,' 'reverse,' 'hold'","Blue line: ring must be passed — not carried — over each line"],
+    mistakes: ["Panic passes — icing or turnover","Over-skating the support — player is late, no outlet","No weak-side awareness — diagonal intercepted","D-to-D pass without scanning pressure first","Carrying the ring over the blue line instead of passing"],
+    progressions: ["Walk through positioning — no pressure","Passive forecheck — defender reacts to position only","Active forecheck — live pressure","Add blue line timing component"],
+    needsInfo: null
+  },
+  {
+    id: 19,
+    name: "3v2 Defensive Roles Drill",
+    tool: "Defensive Triangle",
+    tags: {
+      skill: ["1-on-1","Skating","Ring Possession"],
+      system: ["Defensive Zone"],
+      format: ["3-on-2"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Competitive","Game-simulation"]
+    },
+    purpose: "Trains 3-on-2 defensive roles: who has the ring carrier, who has the trailer, and how the triangle adjusts when outnumbered. Walk through before game situations arise.",
+    setup: "3 attackers vs. 2 defenders plus goalie. Attackers start at the blue line and enter. Defenders set at the top of the circles.",
+    how: "Two defenders: one takes ring carrier, one takes most dangerous trailer. Goalie communicates threats. Triangle adjusts based on where the ring is. If attackers use pick or cycle — defenders communicate switch. Attackers work to create the shot. Rotate.",
+    ktp: ["Know your role before the ring reaches you — no last-second decisions","Communicate constantly with your partner and goalie","Goalie calls threats — listen and trust","If a pick is set: communicate 'switch' early — not after you're beaten","Take away the inside lane — force to the outside or high"],
+    mistakes: ["Both defenders collapsing to the ring carrier — trailer completely open","Confusion on pick coverage — no communication","Goalie silent — defender doesn't know threats behind them","Defending too passively — attackers get quality shot unchallenged","Both defenders too far from the net — attacker drives straight in"],
+    progressions: ["Walk through positions — no ring","Slow-speed attackers — defenders focus on communication","Full speed live 3v2"],
+    needsInfo: null
+  },
+  {
+    id: 20,
+    name: "Blue Line Pass Habit Drill",
+    tool: "Passing — Blue Line Awareness",
+    tags: {
+      skill: ["Passing","Skating"],
+      system: ["Breakout","Neutral Zone"],
+      format: ["Full Team"],
+      situation: ["Even Strength"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused"]
+    },
+    purpose: "Builds the automatic habit of passing the ring over each blue line rather than carrying it through. Trains outlet recognition and pass timing before the carrier reaches the line.",
+    setup: "Full ice. Team runs a basic breakout from the defensive zone. Blue lines are the focus. Coach or partner watches for illegal carries.",
+    how: "Team executes breakout from goalie ring. Every player must pass the ring before reaching any blue line — no carries through. If a carry happens: whistle, reset, repeat. Build the habit through repetition. Verbal cue: 'blue!' from teammates when carrier approaches the line.",
+    ktp: ["Look for the outlet option before reaching the line — not on top of it","Verbal cue: teammates call 'blue!' as carrier approaches","Ring must be passed — not faked or carried — over the line","Have a read and a target before you receive in transition","If no outlet is available: don't panic, look for the next option behind you"],
+    mistakes: ["Carrying the ring through — illegal, costs possession","Looking for outlet only after reaching the line — too late","No teammate calling 'blue' — carrier doesn't know how close they are","Outlet player not in position — carrier has no legal option","Passing too early with no outlet ready — turnover"],
+    progressions: ["Walk through — no speed, just build the read habit","Half speed with verbal cues","Full speed breakout — whistle on any carry","Add live forecheck pressure"],
+    needsInfo: null
+  },
+  {
+    id: 21,
+    name: "Free Pass Execution — By Zone",
+    tool: "Free Pass Situations",
+    tags: {
+      skill: ["Passing","Ring Possession"],
+      system: ["Offensive Zone","Defensive Zone","Neutral Zone"],
+      format: ["Full Team"],
+      situation: ["Even Strength","Free Pass"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused","Competitive"]
+    },
+    purpose: "Trains consistent, immediate free pass execution in all three zones. Every player must know their role before the ring arrives. No hesitation.",
+    setup: "Full team. Simulate free pass situations in each zone: center ice, offensive zone, defensive zone. Coach calls zone and who has possession.",
+    how: "Before the ring arrives at the free pass: every player finds their role and position. Receiver takes ring immediately — 5-second clock starts on the whistle, not when ring is received. First pass must leave the circle immediately. Rotate zones and possession teams.",
+    ktp: ["Role clarity before the ring arrives — not after","5-second clock starts on the whistle — know your read before you receive","Immediate first pass — no hesitation","Offensive zone: create for a shot. Center: gain the zone. Defensive zone: controlled first pass out","Non-ring-carriers: move before the ring arrives — not reactive"],
+    mistakes: ["Hesitation after receiving — standing with the ring","No movement before the ring arrives — reactive positioning","5-second clock expiring — no read, no plan","Wrong role for the zone — offensive zone free pass treated like a center free pass","Non-ring-carrier standing still waiting to be told where to go"],
+    progressions: ["Walk through each zone separately — full role clarity","Add passive opposition","Live opposition — full pressure on 5-second clock"],
+    needsInfo: null
+  },
+  {
+    id: 22,
+    name: "Deceptive Passing — Look-Off and Fake Drill",
+    tool: "Passing — Deceptive",
+    tags: {
+      skill: ["Passing","Ring Possession","1-on-1"],
+      system: ["Offensive Zone"],
+      format: ["2-on-1","3-on-2"],
+      situation: ["Even Strength"],
+      stage: ["U16","U19+"],
+      intensity: ["Skill-focused"]
+    },
+    purpose: "Trains deceptive passing: look-off, pump fake shot then pass, and selling the fake to freeze a defender or goalie before releasing.",
+    setup: "2-on-1 or 3-on-2 situation. Carrier is the focus — must execute a deceptive pass or look-off before releasing.",
+    how: "Carrier drives or moves. Before passing: look-off (look one direction, pass to the other) or pump fake shot then pass. Defender reacts to the fake — read their commitment and exploit. Cue: 'Eyes lie, stick tells truth.'",
+    ktp: ["Eyes lie, stick tells truth — look one way, pass to the other","Pump fake must look real — weight shift, not just a twitch","Read the defender's commitment: if they bite, exploit immediately","Carrier: hold the ring until the defender commits — patience is the weapon","Receiver: read the look-off and time your movement to it"],
+    mistakes: ["Half-hearted fake — defender doesn't react","Telegraphing the real pass with body rotation before release","Holding too long — loses timing advantage","Receiver moving before the look-off is complete — gives it away"],
+    progressions: ["Static 2v0 — practice look-off mechanics","Add passive defender","Live defender — must react to the fake"],
+    needsInfo: "Setup description could be expanded with specific starting positions and ice area."
+  },
+  {
+    id: 23,
+    name: "Goalie Ring Distribution Reads",
+    tool: "Goaltender — Ring Distribution",
+    tags: {
+      skill: ["Passing","Ring Possession"],
+      system: ["Breakout","Defensive Zone"],
+      format: ["Full Team"],
+      situation: ["Even Strength","Goalie Ring"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused","Competitive"]
+    },
+    purpose: "Trains the goalie to read defensive coverage before distributing the ring — not defaulting to the same outlet every time. Includes fakes, stick passes, and Frisbee passes. Trains skaters to provide clear outlets and the 5-second clock.",
+    setup: "Full team. Forecheck team applies pressure (passive to live). Goalie starts with the ring. Breakout team holds positions.",
+    how: "Goalie reads coverage before releasing. Calls or reads: strong-side covered → reverse or weak-side option. Incorporates fake before distributing when pressured. 5-second clock is live — late pass under pressure is a turnover. Skaters provide clear outlet options. Rotate forecheck.",
+    ktp: ["Goalie reads coverage — doesn't default to one outlet always","Pass like a Frisbee: ring low to the ice","Fake incorporated when pressured — deception is a weapon","5-second clock: a late pass is a turnover — read early","Skaters: be at the outlet position before the goalie has the ring"],
+    mistakes: ["Goalie defaulting to same outlet every time — predictable","Slow ring distribution — forecheck sets before ring leaves","No fake under pressure — opponent reads the easy outlet","Skaters not at their outlet position — goalie has no options","Ring distributed high/arc — easy to intercept"],
+    progressions: ["Goalie reads with 2 stationary outlets — no pressure","Add passive forecheck — goalie reads where pressure comes from","Live forecheck — full 5-second clock pressure"],
+    needsInfo: null
+  },
+  {
+    id: 24,
+    name: "Marking on Goalie Ring — Defensive Accountability Drill",
+    tool: "Defensive — Player-on-Player Marking",
+    tags: {
+      skill: ["1-on-1","Skating"],
+      system: ["Defensive Zone","Forechecking"],
+      format: ["Full Team"],
+      situation: ["Even Strength","Goalie Ring"],
+      stage: ["U14","U16","U19+"],
+      intensity: ["Skill-focused","Competitive"]
+    },
+    purpose: "Trains every player to pick a check immediately when the opposing goalie has the ring. No watching, no standing — everyone has a mark before the ring is distributed.",
+    setup: "Full team. Opposing goalie has the ring. Defending team must immediately mark player-on-player before ring leaves the crease.",
+    how: "Goalie ring called. Defending team: every player finds a check immediately — goal-side/inside positioning. Coach scans for any unmatched player. 5-second clock — ring leaves the crease. Immediate reaction from all defenders. Coach stops and corrects any player without a mark. Repeat until automatic.",
+    ktp: ["On a goalie ring: every player picks a check immediately — no standing","Goal-side/inside positioning — don't give the outside","5-second clock: ring will leave the crease fast — be in position before it does","Communicate: call out who you have — no silent defending","If two defenders drift to same check: one must call and adjust"],
+    mistakes: ["Any defender without a check — this is the primary error to eliminate","Ball-watching instead of finding their mark","Defenders giving outside positioning — opponent exits clean","No communication — two defenders on same check, one player free","Defenders reacting after ring leaves instead of before"],
+    progressions: ["Walk through — goalie ring called, full marking walk-through","Add goalie — live 5-second clock","Full team live — ring exits to real breakout, defenders transition"],
+    needsInfo: null
+  }
+];
+
+// Filter state
+let activeFilters = { skill: [], system: [], format: [], situation: [], stage: [], intensity: [] };
+let searchQuery = '';
+let exportDrillId = null;
+
+// Build all filter chips
+function buildFilters() {
+  const categories = {
+    skill: ['Skating','Passing','Receiving','Shooting','Ring Possession','1-on-1'],
+    system: ['Offensive Zone','Defensive Zone','Breakout','Forechecking','Neutral Zone','Situational'],
+    format: ['1-on-0','1-on-1','2-on-1','3-on-2','Small Area Game','Full Team'],
+    situation: ['Even Strength','4-on-3','Penalty Kill','Free Pass','Goalie Ring'],
+    stage: ['U14','U16','U19+'],
+    intensity: ['Skill-focused','Competitive','Game-simulation']
+  };
+  Object.entries(categories).forEach(([cat, values]) => {
+    const container = document.getElementById('filter-' + cat);
+    values.forEach(val => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.textContent = val;
+      chip.onclick = () => toggleFilter(cat, val, chip);
+      container.appendChild(chip);
+    });
+  });
+}
+
+function toggleFilter(cat, val, chip) {
+  const idx = activeFilters[cat].indexOf(val);
+  if (idx === -1) {
+    activeFilters[cat].push(val);
+    chip.classList.add('active-' + cat);
+  } else {
+    activeFilters[cat].splice(idx, 1);
+    chip.classList.remove('active-' + cat);
+  }
+  render();
+}
+
+function clearAll() {
+  Object.keys(activeFilters).forEach(k => activeFilters[k] = []);
+  document.querySelectorAll('.chip').forEach(c => c.className = 'chip');
+  searchQuery = '';
+  document.getElementById('search').value = '';
+  render();
+}
+
+function filterDrills() {
+  return DRILLS.filter(d => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const searchable = [d.name, d.tool, d.purpose, ...(d.ktp||[])].join(' ').toLowerCase();
+      if (!searchable.includes(q)) return false;
+    }
+    for (const [cat, vals] of Object.entries(activeFilters)) {
+      if (vals.length === 0) continue;
+      if (!vals.some(v => d.tags[cat] && d.tags[cat].includes(v))) return false;
+    }
+    return true;
+  });
+}
+
+function tagHtml(type, values) {
+  if (!values || values.length === 0) return '';
+  return values.map(v => `<span class="tag tag-${type}">${v}</span>`).join('');
+}
+
+function renderCard(d) {
+  const allTags = [
+    tagHtml('skill', d.tags.skill),
+    tagHtml('system', d.tags.system),
+    tagHtml('format', d.tags.format),
+    tagHtml('situation', d.tags.situation),
+    tagHtml('stage', d.tags.stage),
+    tagHtml('intensity', d.tags.intensity),
+  ].join('');
+
+  const ktpHtml = (d.ktp || []).map(k => `<li>${k}</li>`).join('');
+  const mistakeHtml = (d.mistakes || []).map(m => `<li>${m}</li>`).join('');
+  const progHtml = (d.progressions || []).map(p => `<span class="pill">${p}</span>`).join('');
+  const needsHtml = d.needsInfo ? `<div class="needs-info">⚠ Needs input: ${d.needsInfo}</div>` : '';
+
+  return `
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-row">
+        <div class="card-name">${d.name}</div>
+      </div>
+      <div class="parent-tool">Tool: <span>${d.tool}</span></div>
+      <div class="tag-row">${allTags}</div>
+    </div>
+    <div class="card-body">
+      <div class="col-left">
+        <div class="diagram-slot">
+          <div class="diagram-slot-text">Diagram / photo</div>
+        </div>
+        <div class="setup-block">
+          <div class="setup-block-label">Setup</div>
+          <div class="setup-block-text">${d.setup || '<em>To be added</em>'}</div>
+        </div>
+      </div>
+      <div class="col-right">
+        <div class="section">
+          <div class="section-label">Purpose</div>
+          <p class="purpose-text">${d.purpose}</p>
+          ${needsHtml}
+        </div>
+        ${d.how ? `<div class="section"><div class="section-label">How it runs</div><p class="purpose-text" style="font-size:12px;color:var(--text-muted)">${d.how}</p></div>` : ''}
+        ${ktpHtml ? `<div class="section"><div class="section-label">Key teaching points</div><ul class="ktp-list">${ktpHtml}</ul></div>` : ''}
+        ${mistakeHtml ? `<div class="section"><div class="section-label">Common mistakes</div><ul class="mistake-list">${mistakeHtml}</ul></div>` : ''}
+        ${progHtml ? `<div class="section"><div class="section-label">Progressions</div><div class="pills">${progHtml}</div></div>` : ''}
+      </div>
+    </div>
+    <div class="card-footer">
+      <button class="footer-btn" onclick="filterByTool('${d.tool.replace(/'/g,"\\'")}')">All ${d.tool} drills</button>
+      <button class="footer-btn" onclick="openExport(${d.id})">Export to Word ↗</button>
+    </div>
+  </div>`;
+}
+
+function filterByTool(tool) {
+  document.getElementById('search').value = tool;
+  searchQuery = tool.toLowerCase();
+  render();
+}
+
+function render() {
+  const filtered = filterDrills();
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  const count = document.getElementById('drill-count');
+  const results = document.getElementById('results-count');
+
+  count.textContent = DRILLS.length + ' drills';
+  results.textContent = filtered.length === DRILLS.length
+    ? `Showing all ${DRILLS.length} drills`
+    : `${filtered.length} of ${DRILLS.length} drills`;
+
+  if (filtered.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+  } else {
+    grid.style.display = 'grid';
+    empty.style.display = 'none';
+    grid.innerHTML = filtered.map(renderCard).join('');
+  }
+}
+
+// Export modal
+function openExport(id) {
+  exportDrillId = id;
+  const d = DRILLS.find(x => x.id === id);
+  document.getElementById('modal-drill-name').textContent = d.name;
+  document.getElementById('export-full-btn').onclick = () => exportDrill(id, 'full');
+  document.getElementById('export-compact-btn').onclick = () => exportDrill(id, 'compact');
+  document.getElementById('export-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('export-modal').classList.remove('open');
+}
+
+function exportDrill(id, mode) {
+  const d = DRILLS.find(x => x.id === id);
+  const tags = Object.entries(d.tags).map(([k,v])=>v.join(', ')).filter(Boolean).join(' | ');
+
+  let content = '';
+  if (mode === 'full') {
+    content = `LONDON RINGETTE — DRILL CARD\n${'='.repeat(50)}\n\n${d.name}\nTool: ${d.tool}\nTags: ${tags}\n\n`;
+    content += `PURPOSE\n${d.purpose}\n\n`;
+    if (d.setup) content += `SETUP\n${d.setup}\n\n`;
+    if (d.how) content += `HOW IT RUNS\n${d.how}\n\n`;
+    if (d.ktp && d.ktp.length) content += `KEY TEACHING POINTS\n${d.ktp.map(k=>`• ${k}`).join('\n')}\n\n`;
+    if (d.mistakes && d.mistakes.length) content += `COMMON MISTAKES\n${d.mistakes.map(m=>`• ${m}`).join('\n')}\n\n`;
+    if (d.progressions && d.progressions.length) content += `PROGRESSIONS\n${d.progressions.map(p=>`• ${p}`).join('\n')}\n\n`;
+    if (d.needsInfo) content += `NEEDS INPUT: ${d.needsInfo}\n\n`;
+    content += `[ DIAGRAM / PHOTO ]\n\n`;
+  } else {
+    content = `${d.name}\n${'—'.repeat(40)}\nTool: ${d.tool} | ${tags}\n\nPURPOSE: ${d.purpose}\n\n`;
+    if (d.ktp && d.ktp.length) content += `KEY TEACHING POINTS\n${d.ktp.map(k=>`• ${k}`).join('\n')}\n\n`;
+    content += `[ DIAGRAM / PHOTO ]\n`;
+  }
+
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${d.name.replace(/[^a-z0-9]/gi,'_')}_${mode}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeModal();
+}
+
+// Search
+document.getElementById('search').addEventListener('input', e => {
+  searchQuery = e.target.value.toLowerCase();
+  render();
+});
+
+// Close modal on background click
+document.getElementById('export-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+buildFilters();
+render();
+</script>
+</body>
+</html>
